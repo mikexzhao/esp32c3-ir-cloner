@@ -1,0 +1,11 @@
+# ESP-IDF build outputs
+build/
+sdkconfig
+sdkconfig.old
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.suo
+*.user

@@ -9,3 +9,4 @@ sdkconfig.old
 *.swp
 *.suo
 *.user
+antigravity.db

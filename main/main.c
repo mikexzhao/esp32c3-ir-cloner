@@ -305,6 +305,9 @@ static void cloner_task(void *pvParameters) {
 
 void app_main(void) {
     ESP_LOGI(TAG, "Starting ESP32-C3 IR Cloner Firmware");
+    ESP_LOGI(TAG, "Firmware Version: 1.01");
+    ESP_LOGI(TAG, "Release Date: June 5th, 2026");
+    ESP_LOGI(TAG, "Author: Mike Zhao (EtonTech)");
     
     // Create the cloner task with higher priority to ensure microsecond timing accuracy
     xTaskCreate(cloner_task, "cloner_task", 4096, NULL, 10, NULL);

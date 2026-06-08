@@ -213,8 +213,9 @@ static esp_err_t get_handler(httpd_req_t *req) {
 static esp_err_t redirect_handler(httpd_req_t *req) {
     feed_inactivity_timer();
     httpd_resp_set_status(req, "302 Found");
-    httpd_resp_set_hdr(req, "Location", "/");
-    httpd_resp_send(req, NULL, 0);
+    httpd_resp_set_hdr(req, "Location", "http://192.168.4.1/");
+    const char *body = "<html><body>Redirecting to captive portal...</body></html>";
+    httpd_resp_send(req, body, HTTPD_RESP_USE_STRLEN);
     return ESP_OK;
 }
 
@@ -517,7 +518,7 @@ static void cloner_task(void *pvParameters) {
     }
 }
 
-// Wi-Fi teardown & load IR Cloner after 60-second inactivity timeout
+// Wi-Fi teardown after 5-minute inactivity timeout
 static void ota_timeout_callback(void* arg) {
     ESP_LOGI(TAG, "OTA setup window timed out. Disabling Wi-Fi...");
 
@@ -534,9 +535,7 @@ static void ota_timeout_callback(void* arg) {
     esp_wifi_stop();
     esp_wifi_deinit();
     
-    ESP_LOGI(TAG, "Wi-Fi radio completely powered off. Starting main application cloner...");
-    
-    xTaskCreate(cloner_task, "cloner_task", 4096, NULL, 10, NULL);
+    ESP_LOGI(TAG, "Wi-Fi radio completely powered off.");
 }
 
 // OTA Background execution worker task
@@ -675,13 +674,16 @@ void app_main(void) {
     // Spawn OTA task
     xTaskCreate(ota_task, "ota_task", 8192, NULL, 5, &s_ota_task_handle);
 
-    // Setup 60-second inactivity callback
+    // Spawn IR cloner task immediately on boot
+    xTaskCreate(cloner_task, "cloner_task", 4096, NULL, 10, NULL);
+
+    // Setup 5-minute inactivity callback
     const esp_timer_create_args_t timer_args = {
         .callback = &ota_timeout_callback,
         .name = "ota_timeout"
     };
     ESP_ERROR_CHECK(esp_timer_create(&timer_args, &s_inactivity_timer));
-    ESP_ERROR_CHECK(esp_timer_start_once(s_inactivity_timer, 60000000));
+    ESP_ERROR_CHECK(esp_timer_start_once(s_inactivity_timer, 300000000ULL));
     
-    ESP_LOGI(TAG, "Inactivity timer set. Captive portal configuration active.");
+    ESP_LOGI(TAG, "Inactivity timer set to 5 minutes. Captive portal configuration active.");
 }
